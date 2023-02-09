@@ -1,0 +1,29 @@
+---
+- name: Create grafana data volume
+  community.docker.docker_volume:
+    name: grafana-data
+
+- name: Create monitoring docker network
+  community.docker.docker_network:
+    name: monitoring
+
+- name: Run grafana container
+  community.docker.docker_container:
+    name: grafana
+    image: grafana/grafana-oss
+    state: started
+    restart_policy: always
+    volumes:
+      - grafana-data:/var/lib/grafana
+    networks:
+      - name: monitoring
+    published_ports:
+      - "{{ grafana_port }}:3000"
+
+- name: Permit traffic for grafana port
+  ansible.posix.firewalld:
+    port: "{{ grafana_port }}/tcp"
+    permanent: true
+    zone: public
+    state: enabled
+    immediate: yes
